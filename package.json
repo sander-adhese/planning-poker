@@ -1,0 +1,9 @@
+{
+    "name": "planning-poker",
+    "version": "0.0.1",
+    "description": "Planning poker for SCRUM",
+    "dependencies": {
+        "express": "^4.17.1",
+        "socket.io": "^4.1.2"
+    }
+}

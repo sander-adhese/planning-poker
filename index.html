@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Planning poker</title>
+    <style>
+        body {
+            margin: 0;
+            padding-bottom: 3rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        input[type=text],
+        select {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type=submit] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+
+        div {
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+
+        .center {
+            margin: auto;
+            width: fit-content;
+            padding: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* Style the header */
+        .header {
+            background-color: darkgrey;
+            height: 80px;
+        }
+
+        /* Container for flexboxes */
+        .row {
+            display: -webkit-flex;
+            display: flex;
+        }
+
+        /* Create three unequal columns that sits next to each other */
+        .column {
+            padding: 10px;
+        }
+
+        /* Left and right column */
+        .column.side {
+            -webkit-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+        }
+
+        /* Middle column */
+        .column.middle {
+            -webkit-flex: 2;
+            -ms-flex: 2;
+            flex: 2;
+        }
+
+        /* Style the footer */
+        .footer {
+            background-color: #f1f1f1;
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+        @media (max-width: 600px) {
+            .row {
+                -webkit-flex-direction: column;
+                flex-direction: column;
+            }
+        }
+
+        button.vote-button {
+            width: 100px;
+            height: 60px;
+            float: left;
+            margin: 15px;
+        }
+
+        button.menu-button {
+            float: right;
+            width: 90px;
+            height: 30px;
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="menu-section" class="header" hidden>
+        <p id="welcome" style="float:left;"></p>
+
+        <form id="form-clear" action="">
+            <button class="menu-button">Reset</button>
+        </form>
+        <form id="form-force" action="">
+            <button class="menu-button">Force votes</button>
+        </form>
+        <form id="form-exit" action="">
+            <button class="menu-button">Disconnect</button>
+        </form>
+    </div>
+
+    <div class="row">
+        <div id="result-section" hidden class="column side">
+            <p>Awaiting</p>
+            <ul id="awaiting"></ul>
+        </div>
+
+        <div class="column middle">
+            <div id="login-section" class="center">
+                <form id="form-username" action="">
+                    <input id="input" type="text" placeholder="Your name.." autocomplete="off" /><input type="submit"
+                        value="Connect">
+                </form>
+            </div>
+            <div id="voting-section" hidden>
+                <p id="last_result"></p>
+                <p id="your_vote"></p>
+                <div id="votes"></div>
+            </div>
+        </div>
+
+        <div id="connected-section" hidden class="column side">
+            <p>Connected users</p>
+            <ul id="connected"></ul>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        var loginSection = document.getElementById('login-section');
+        var menuSection = document.getElementById('menu-section');
+        var votingSection = document.getElementById('voting-section');
+        var resultSection = document.getElementById('result-section');
+        var connectedSection = document.getElementById('connected-section');
+
+        var messages = document.getElementById('messages');
+        var usernameForm = document.getElementById('form-username');
+        var clearForm = document.getElementById('form-clear');
+        var exitForm = document.getElementById('form-exit');
+        var forceForm = document.getElementById('form-force');
+        var input = document.getElementById('input');
+        var welcome = document.getElementById('welcome');
+        var connected = document.getElementById('connected');
+        var voteContainer = document.getElementById('votes');
+        var youVoted = document.getElementById('your_vote');
+        var awaiting = document.getElementById('awaiting');
+        var lastResult = document.getElementById('last_result');
+        var username = "empoyee";
+        var validVotes = ["0.5", "1", "2", "3", "5", "8", "13", "20", "40", "100", "?"];
+
+        for (index in validVotes) {
+            var voteItem = document.createElement('form');
+            voteItem.id = "vote-for-" + validVotes[index];
+            voteItem.action = "";
+            var voteItemButton = document.createElement('button');
+            voteItemButton.innerText = validVotes[index];
+            voteItemButton.className = "vote-button";
+            voteItem.appendChild(voteItemButton);
+            voteItem.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var yourVote = e.target[0].innerText;
+                youVoted.innerText = "You voted: " + yourVote
+                socket.emit('vote', username, yourVote);
+            });
+            voteContainer.appendChild(voteItem);
+        }
+
+        usernameForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('username', input.value);
+                username = input.value;
+                loginSection.hidden = true;
+                welcome.textContent = "Welcome, " + username;
+                menuSection.hidden = false;
+                votingSection.hidden = false;
+                resultSection.hidden = false;
+                connectedSection.hidden = false;
+            }
+        });
+
+        clearForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            socket.emit('clear', username);
+        });
+
+        exitForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            socket.emit('exit', username);
+            loginSection.hidden = false;
+            menuSection.hidden = true;
+            votingSection.hidden = true;
+            resultSection.hidden = true;
+            connectedSection.hidden = true;
+        });
+
+        forceForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            socket.emit('force-vote', username);
+        });
+
+        socket.on('usernames', function (usernames) {
+            connected.textContent = "";
+            for (index in usernames) {
+                var item = document.createElement('li');
+                item.innerText = usernames[index];
+                connected.appendChild(item);
+            }
+        });
+        socket.on('vote-result', function (result, qMarks) {
+            awaiting.textContent = "";
+            var text = "Last result: " + result;
+            if (qMarks > 0) {
+                text += ", with " + qMarks + " '?'s"
+            }
+            lastResult.textContent = text;
+        });
+        socket.on('waiting-on', function (usernames) {
+            awaiting.textContent = "";
+            for (index in usernames) {
+                var item = document.createElement('li');
+                item.innerText = usernames[index];
+                awaiting.appendChild(item);
+            }
+        });
+        socket.on('vote-cleared', function () {
+            awaiting.textContent = "";
+            youVoted.textContent = "";
+        });
+    </script>
+</body>
+
+</html>
