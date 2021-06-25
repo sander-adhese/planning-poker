@@ -259,8 +259,11 @@
             }
         });
         socket.on('vote-cleared', function () {
-            awaiting.textContent = "";
-            youVoted.textContent = "";
+            loginSection.hidden = false;
+            menuSection.hidden = true;
+            votingSection.hidden = true;
+            resultSection.hidden = true;
+            connectedSection.hidden = true;
         });
     </script>
 </body>

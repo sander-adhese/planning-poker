@@ -77,6 +77,7 @@ io.on('connection', (socket) => {
   
   socket.on('clear', (username) => {
     result = {};
+    users = [];
     io.emit('vote-cleared');
     console.log(username + ' cleared the votes!');
   });
