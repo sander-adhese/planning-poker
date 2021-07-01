@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
               qMarks++;
           }
       }
-      io.emit('vote-result', (sum / valids).toFixed(1), qMarks);
+      io.emit('vote-result', (sum / valids).toFixed(1), votes);
       result = {};
     } else {
         var voters = Object.keys(result);

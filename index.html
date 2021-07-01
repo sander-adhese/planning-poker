@@ -242,13 +242,9 @@
                 connected.appendChild(item);
             }
         });
-        socket.on('vote-result', function (result, qMarks) {
+        socket.on('vote-result', function (result, votes) {
             awaiting.textContent = "";
-            var text = "Last result: " + result;
-            if (qMarks > 0) {
-                text += ", with " + qMarks + " '?'s"
-            }
-            lastResult.textContent = text;
+            lastResult.textContent = "Last result: " + result + " (" + votes+ ")";
         });
         socket.on('waiting-on', function (usernames) {
             awaiting.textContent = "";
