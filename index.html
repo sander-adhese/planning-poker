@@ -128,6 +128,9 @@
         <form id="form-force" action="">
             <button class="menu-button">Force votes</button>
         </form>
+        <form id="form-votes-clear" action="">
+            <button class="menu-button">Clear votes</button>
+        </form>
         <form id="form-exit" action="">
             <button class="menu-button">Disconnect</button>
         </form>
@@ -173,6 +176,7 @@
         var clearForm = document.getElementById('form-clear');
         var exitForm = document.getElementById('form-exit');
         var forceForm = document.getElementById('form-force');
+        var clearVotesForm = document.getElementById('form-votes-clear');
         var input = document.getElementById('input');
         var welcome = document.getElementById('welcome');
         var connected = document.getElementById('connected');
@@ -232,6 +236,13 @@
         forceForm.addEventListener('submit', function (e) {
             e.preventDefault();
             socket.emit('force-vote', username);
+        });
+
+        clearVotesForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            awaiting.textContent = "";
+            lastResult.textContent = "";
+            socket.emit('clear-vote', username);
         });
 
         socket.on('usernames', function (usernames) {

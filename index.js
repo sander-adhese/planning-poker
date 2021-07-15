@@ -14,12 +14,12 @@ var result = {};
 
 io.on('connection', (socket) => {
   console.log('a user connected');
-  
+
   socket.on('username', (username) => {
     users.push(username);
     io.emit('usernames', users);
   });
-  
+
   socket.on('vote', (username, vote) => {
     result[username] = vote;
     if (Object.keys(result).length == users.length) {
@@ -28,27 +28,27 @@ io.on('connection', (socket) => {
       var qMarks = 0;
       var votes = Object.values(result);
       for (index in votes) {
-          if (votes[index] !== "?") {
-              valids++;
-              sum += parseFloat(votes[index]);
-          } else {
-              qMarks++;
-          }
+        if (votes[index] !== "?") {
+          valids++;
+          sum += parseFloat(votes[index]);
+        } else {
+          qMarks++;
+        }
       }
       io.emit('vote-result', (sum / valids).toFixed(1), votes);
       result = {};
     } else {
-        var voters = Object.keys(result);
-        var awaiting = [];
-        for (index in users) {
-          if (voters.indexOf(users[index]) == -1) {
-              awaiting.push(users[index]);
-          }
+      var voters = Object.keys(result);
+      var awaiting = [];
+      for (index in users) {
+        if (voters.indexOf(users[index]) == -1) {
+          awaiting.push(users[index]);
         }
-        io.emit('waiting-on', awaiting);
+      }
+      io.emit('waiting-on', awaiting);
     }
-    
-});
+
+  });
 
   socket.on('force-vote', (username) => {
     var sum = 0;
@@ -56,32 +56,37 @@ io.on('connection', (socket) => {
     var qMarks = 0;
     var votes = Object.values(result);
     for (index in votes) {
-        if (votes[index] !== "?") {
-            valids++;
-            sum += parseFloat(votes[index]);
-        } else {
-            qMarks++;
-        }
+      if (votes[index] !== "?") {
+        valids++;
+        sum += parseFloat(votes[index]);
+      } else {
+        qMarks++;
+      }
     }
     io.emit('vote-result', (sum / valids).toFixed(1));
     result = {};
-    console.log(username + ' forced the votes!');        
+    console.log(username + ' forced the votes!');
+  });
+
+  socket.on('clear-vote', (username) => {
+    result = {};
+    console.log(username + ' cleared the votes!');
   });
 
   socket.on('exit', (username) => {
     while (users.indexOf(username) > -1) {
-        users.splice(users.indexOf(username), 1);
+      users.splice(users.indexOf(username), 1);
     }
     io.emit('usernames', users);
   });
-  
+
   socket.on('clear', (username) => {
     result = {};
     users = [];
     io.emit('vote-cleared');
     console.log(username + ' cleared the votes!');
   });
-  
+
   socket.on('disconnect', () => {
     console.log('user disconnected');
   });
