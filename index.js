@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
         qMarks++;
       }
     }
-    io.emit('vote-result', (sum / valids).toFixed(1));
+    io.emit('vote-result', (sum / valids).toFixed(1), votes);
     result = {};
     console.log(username + ' forced the votes!');
   });

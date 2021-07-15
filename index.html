@@ -255,7 +255,8 @@
         });
         socket.on('vote-result', function (result, votes) {
             awaiting.textContent = "";
-            lastResult.textContent = "Last result: " + result + " (" + votes+ ")";
+            var sorted = "" + votes.sort(function(a, b) {if (a === "?") { return 1; } if (b === "?") { return -1; }  return parseInt(a) - parseInt(b);});
+            lastResult.textContent = "Last result: " + result + " (" + sorted.replace(',', ', ') + ")";
         });
         socket.on('waiting-on', function (usernames) {
             awaiting.textContent = "";
